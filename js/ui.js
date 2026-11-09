@@ -86,6 +86,8 @@ HC.UI = {
     ctx.restore();
     return focused;
   },
+  clock(sec) { sec = Math.ceil(Math.max(0, sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); },
+  timeLabel(min) { return min > 0 ? min + ' MIN' : 'OFF'; },
   panel(ctx, x, y, w, h, col) {
     ctx.fillStyle = col || 'rgba(10,10,30,0.82)'; HC.rr(ctx, x, y, w, h, 18); ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 3; HC.rr(ctx, x, y, w, h, 18); ctx.stroke();
@@ -118,7 +120,10 @@ HC.UI = {
       U.text(ctx, String(m.score[1]), W / 2 + 100, 41, 40, '#fff', 'left', 5);
       const pt = Math.max(0, Math.ceil(m.pointTime));
       U.text(ctx, String(pt), W / 2, 34, 30, pt <= C.BUZZER_WINDOW ? '#f44' : '#ffde00', 'center', 4);
-      U.small(ctx, 'FIRST TO ' + m.winScore, W / 2, 62, 13, '#ccc', 'center');
+      let sub = 'FIRST TO ' + m.winScore;
+      if (m.overtime) sub = 'OVERTIME • NEXT BASKET WINS';
+      else if (m.gameClock != null) sub += '  •  ⏱ ' + HC.UI.clock(m.gameClock);
+      U.small(ctx, sub, W / 2, 62, 13, m.overtime || (m.gameClock != null && m.gameClock <= 10) ? '#ff5555' : '#ccc', 'center');
       if (m.mode === 'hotpotato') U.small(ctx, '💣 HOT POTATO', W / 2, 88, 16, '#f80', 'center');
     }
     // ---- mutator + court event chips ----
@@ -254,6 +259,9 @@ S.title = {
     const best = sv.best ? 'Best tournament: ' + sv.best : 'No tournament played yet';
     HC.UI.small(ctx, best + '   •   🏆 x' + sv.trophies + '   •   Bosses beaten: ' + Object.keys(sv.bosses).length + '/4', W() / 2, 625, 18, '#ffde00', 'center');
     HC.UI.small(ctx, 'P1 = W    P2 = ↑    Esc = pause', W() / 2, 660, 16, '#ccc', 'center');
+    const u = HC.Auth.user;
+    HC.UI.button(ctx, app, { x: W() - 250, y: 14, w: 236, h: 50, label: u && u.mode !== 'guest' ? '👤 ' + u.name : '👤 LOG IN', color: '#1b6d5a', size: 18, onClick: () => HC.LoginPage.show() });
+    HC.UI.small(ctx, HC.Auth.label(), W() - 132, 76, 13, '#ddd', 'center');
   },
 };
 
@@ -264,7 +272,8 @@ S.players = {
     HC.UI.title(ctx, name, 80);
     HC.UI.button(ctx, app, { x: W() / 2 - 420, y: 170, w: 400, h: 120, label: '1 PLAYER', sub: 'You (W) vs CPU (' + app.settings.difficulty + ')', color: '#2e86ff', onClick: () => app.go('chars', Object.assign({}, p, { humans: 1 })) });
     HC.UI.button(ctx, app, { x: W() / 2 + 20, y: 170, w: 400, h: 120, label: '2 PLAYERS', sub: 'P1 = W   vs   P2 = ↑ (local)', color: '#e74c3c', onClick: () => app.go('chars', Object.assign({}, p, { humans: 2 })) });
-    HC.UI.button(ctx, app, { x: W() / 2 - 200, y: 320, w: 400, h: 64, label: 'CPU: ' + app.settings.difficulty.toUpperCase(), color: '#8e44ad', onClick: () => app.cycleDifficulty() });
+    HC.UI.button(ctx, app, { x: W() / 2 - (p.mode === 'horse' ? 200 : 420), y: 320, w: 400, h: 64, label: 'CPU: ' + app.settings.difficulty.toUpperCase(), color: '#8e44ad', onClick: () => app.cycleDifficulty() });
+    if (p.mode !== 'horse') HC.UI.button(ctx, app, { x: W() / 2 + 20, y: 320, w: 400, h: 64, label: 'TIME LIMIT: ' + HC.UI.timeLabel(app.settings.matchTime), color: '#16a085', onClick: () => app.cycleMatchTime(), size: 24 });
     if (p.mode === 'horse') {
       HC.UI.small(ctx, 'Word to spell:', W() / 2, 420, 22, '#fff', 'center');
       ['HORSE', 'PIG', 'HOOP'].forEach((wd, i) => HC.UI.button(ctx, app, { x: W() / 2 - 310 + i * 210, y: 445, w: 190, h: 64, label: wd, color: (p.word || 'HORSE') === wd ? '#2ecc71' : '#555', onClick: () => { p.word = wd; } }));
@@ -525,13 +534,15 @@ S.settings = {
       HC.UI.text(ctx, value, W() / 2 + 200, y + 28, 26, '#ffde00', 'center', 4);
       HC.UI.button(ctx, app, { x: W() / 2 + 280, y, w: 60, h: 56, label: '+', color: '#555', onClick: plus });
     };
-    row(140, 'VOLUME', Math.round(st.volume * 100) + '%', () => app.setSetting('volume', Math.max(0, +(st.volume - 0.1).toFixed(2))), () => app.setSetting('volume', Math.min(1, +(st.volume + 0.1).toFixed(2))));
-    row(210, 'POINTS TO WIN', String(st.winScore), () => app.setSetting('winScore', Math.max(2, st.winScore - 1)), () => app.setSetting('winScore', Math.min(30, st.winScore + 1)));
+    row(130, 'VOLUME', Math.round(st.volume * 100) + '%', () => app.setSetting('volume', Math.max(0, +(st.volume - 0.1).toFixed(2))), () => app.setSetting('volume', Math.min(1, +(st.volume + 0.1).toFixed(2))));
+    row(200, 'POINTS TO WIN', String(st.winScore), () => app.setSetting('winScore', Math.max(2, st.winScore - 1)), () => app.setSetting('winScore', Math.min(30, st.winScore + 1)));
     const diffs = ['easy', 'medium', 'hard'];
-    row(280, 'CPU DIFFICULTY', st.difficulty.toUpperCase(), () => app.setSetting('difficulty', diffs[Math.max(0, diffs.indexOf(st.difficulty) - 1)]), () => app.setSetting('difficulty', diffs[Math.min(2, diffs.indexOf(st.difficulty) + 1)]));
-    row(350, 'SCREEN SHAKE', st.shake ? 'ON' : 'OFF', () => app.setSetting('shake', !st.shake), () => app.setSetting('shake', !st.shake));
-    row(420, 'UNLOCK ALL (testing)', st.unlockAll ? 'ON' : 'OFF', () => app.setSetting('unlockAll', !st.unlockAll), () => app.setSetting('unlockAll', !st.unlockAll));
-    HC.UI.button(ctx, app, { x: W() / 2 - 150, y: 510, w: 300, h: 56, label: 'RESET SAVE DATA', color: '#c0392b', size: 18, onClick: () => { if (confirm('Erase all progress?')) HC.Save.reset(); } });
+    row(270, 'CPU DIFFICULTY', st.difficulty.toUpperCase(), () => app.setSetting('difficulty', diffs[Math.max(0, diffs.indexOf(st.difficulty) - 1)]), () => app.setSetting('difficulty', diffs[Math.min(2, diffs.indexOf(st.difficulty) + 1)]));
+    const times = HC.MATCH_TIMES, ti = Math.max(0, times.indexOf(st.matchTime));
+    row(340, 'GAME TIME LIMIT', HC.UI.timeLabel(st.matchTime), () => app.setSetting('matchTime', times[Math.max(0, ti - 1)]), () => app.setSetting('matchTime', times[Math.min(times.length - 1, ti + 1)]));
+    row(410, 'SCREEN SHAKE', st.shake ? 'ON' : 'OFF', () => app.setSetting('shake', !st.shake), () => app.setSetting('shake', !st.shake));
+    row(480, 'UNLOCK ALL (testing)', st.unlockAll ? 'ON' : 'OFF', () => app.setSetting('unlockAll', !st.unlockAll), () => app.setSetting('unlockAll', !st.unlockAll));
+    HC.UI.button(ctx, app, { x: W() / 2 + 220, y: 640, w: 300, h: 56, label: 'RESET SAVE DATA', color: '#c0392b', size: 18, onClick: () => { if (confirm('Erase all progress?')) HC.Save.reset(); } });
     HC.UI.backButton(ctx, app, () => app.go('title'));
   },
 };

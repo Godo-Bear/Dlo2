@@ -1,10 +1,18 @@
-// Cloudflare Workers config: serves Hoop Chaos as static assets (no build step).
+// Cloudflare Workers config: serves Hoop Chaos as static assets, plus a small
+// account API in worker.js for saving progress online.
 // "name" must match the Worker you created in the Cloudflare dashboard.
 {
   "name": "dlo2",
+  "main": "worker.js",
   "compatibility_date": "2025-01-01",
   "assets": {
     "directory": "./",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS"
   }
+  // To turn on ONLINE accounts, create a KV namespace (Dashboard > Storage & Databases >
+  // Workers KV > Create, name it e.g. "hoopchaos-saves"), then add its ID here:
+  //
+  // ,"kv_namespaces": [ { "binding": "SAVES", "id": "PASTE_YOUR_KV_NAMESPACE_ID" } ]
+  //
+  // Without it the game still works and accounts are saved on each device instead.
 }

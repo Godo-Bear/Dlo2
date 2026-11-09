@@ -21,6 +21,11 @@ HC.Match = class Match {
     this.activeMutator = null; this.mutatorsOn = opts.mutators !== false;
     this.recorder = new HC.Recorder(4);
     this.timed = true; this.pointTime = C.POINT_TIME;
+    // optional whole-game time limit (minutes, 0 = off). When it runs out the leader wins;
+    // a tie goes to overtime where the next basket wins.
+    const mt = opts.matchTime || 0;
+    this.gameClock = mt > 0 && ['quick', 'hotpotato', 'tournament'].includes(opts.mode) ? mt * 60 : null;
+    this.overtime = false;
     this.excitement = 0.2; this.wind = 0; this.windMut = 0; this.windCourt = 0; this.windBoss = 0;
     this.darkMut = 0; this.darkCourt = 0; this.lavaH = 0; this.floorAngle = 0;
     this.statsPlayers = []; // persistent stat holders per (team,slot)
@@ -388,6 +393,7 @@ HC.Match = class Match {
     if (this.boss) { if (this.boss.health <= 0) return 0; if (this.boss.bossScore >= HC.CONFIG.BOSS_WIN_SCORE) return 1; return -1; }
     if (this.score[0] >= this.winScore) return 0;
     if (this.score[1] >= this.winScore) return 1;
+    if (this.gameClock != null && this.gameClock <= 0 && this.score[0] !== this.score[1]) return this.score[0] > this.score[1] ? 0 : 1;
     return -1;
   }
 
@@ -500,6 +506,16 @@ HC.Match = class Match {
         if (!live || this.pointTime < -2.5) this.shotClockExpired();
       }
     }
+    if (this.gameClock != null && this.state === 'play' && !this.overtime) {
+      const before = this.gameClock;
+      this.gameClock = Math.max(0, this.gameClock - dt);
+      if (before > 10 && this.gameClock <= 10) HC.Audio.beep(true);
+      if (this.gameClock <= 0) {
+        const live = this.balls.some(b => b.shot && !b.heldBy && !b.shot.ground);
+        this.timeGrace = (this.timeGrace || 0) + dt;
+        if (!live || this.timeGrace > 2.5) this.gameTimeUp();
+      }
+    }
     if (this.state === 'scored') { this.stateT -= dt; if (this.stateT <= 0) { this.state = 'post'; this.afterScore(); } }
     if (this.modeStep) this.modeStep(dt);
 
@@ -512,6 +528,13 @@ HC.Match = class Match {
 
     this.snap = this.snapshot();
     if (this.state === 'play' || this.state === 'scored') this.recorder.push(this.snap);
+  }
+
+  gameTimeUp() {
+    HC.Audio.buzzer();
+    const w = this.score[0] === this.score[1] ? -1 : (this.score[0] > this.score[1] ? 0 : 1);
+    if (w >= 0) { this.fx.bigText("TIME'S UP!", '#ffde00', 1.5); this.finish(w); }
+    else { this.overtime = true; this.fx.bigText('OVERTIME! NEXT BASKET WINS', '#ff5555', 2); HC.Audio.whistle(); }
   }
 
   shotClockExpired() {

@@ -6,17 +6,21 @@ HC.Save = {
   key: 'hoopchaos_save_v1',
   defaults() {
     return { best: '', bestRank: -1, trophies: 0, unlocked: {}, bosses: {},
-      settings: { volume: 0.7, winScore: HC.CONFIG.WIN_SCORE, difficulty: 'medium', shake: true, unlockAll: false } };
+      settings: { volume: 0.7, winScore: HC.CONFIG.WIN_SCORE, matchTime: HC.CONFIG.MATCH_TIME, difficulty: 'medium', shake: true, unlockAll: false } };
   },
   data: null,
-  load() {
-    this.data = this.defaults();
-    try {
-      const raw = localStorage.getItem(this.key);
-      if (raw) { const d = JSON.parse(raw); Object.assign(this.data, d); this.data.settings = Object.assign(this.defaults().settings, d.settings || {}); }
-    } catch (e) { /* storage unavailable: play without saving */ }
+  merge(d) {
+    const out = this.defaults();
+    if (d && typeof d === 'object') { Object.assign(out, d); out.settings = Object.assign(this.defaults().settings, d.settings || {}); }
+    return out;
   },
-  save() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* ignore */ } },
+  load() {
+    let d = null;
+    try { const raw = localStorage.getItem(this.key); if (raw) d = JSON.parse(raw); } catch (e) { d = null; /* storage unavailable: play without saving */ }
+    this.data = this.merge(d);
+  },
+  writeLocal() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* ignore */ } },
+  save() { this.writeLocal(); if (HC.Auth) HC.Auth.queuePush(); },
   reset() { const st = this.data.settings; this.data = this.defaults(); this.data.settings = st; this.save(); },
 };
 
@@ -38,6 +42,14 @@ HC.App = {
     this.makeDemo();
     this.last = performance.now(); this.acc = 0;
     requestAnimationFrame((t) => this.frame(t));
+    // accounts: restore the last session or show the login page
+    HC.Auth.init().then((ok) => { if (!ok) HC.LoginPage.show(); }).catch(() => HC.LoginPage.show());
+  },
+
+  onProfileChanged() {
+    this.settings = HC.Save.data.settings;
+    HC.Audio.setVolume(this.settings.volume);
+    if (this.screen !== 'play') this.go('title');
   },
 
   makeDemo() {
@@ -64,6 +76,7 @@ HC.App = {
   bindInput() {
     const gameKeys = ['KeyW', 'ArrowUp', 'Space', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
     window.addEventListener('keydown', (e) => {
+      if (HC.LoginPage.visible() || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
       HC.Audio.init();
       if (gameKeys.includes(e.code)) e.preventDefault();
       if (e.repeat) return;
@@ -141,6 +154,7 @@ HC.App = {
   },
 
   teamColors(team, p) { return team === 0 ? { main: '#2e86ff', alt: '#ffffff' } : { main: '#ff3b3b', alt: '#ffffff' }; },
+  cycleMatchTime() { const t = HC.MATCH_TIMES; this.setSetting('matchTime', t[(t.indexOf(this.settings.matchTime) + 1) % t.length]); },
   cycleDifficulty() { const d = ['easy', 'medium', 'hard']; this.setSetting('difficulty', d[(d.indexOf(this.settings.difficulty) + 1) % 3]); },
   setSetting(k, v) { this.settings[k] = v; if (k === 'volume') HC.Audio.setVolume(v); HC.Save.save(); },
 
@@ -166,10 +180,10 @@ HC.App = {
         teams: [{ name: 'YOU', colors: this.teamColors(0), chars: p.picks[0], cpu: null }, { name: b.name, colors: b.colors, chars: [b.charId], cpu: b.cpu }] };
     } else if (p.mode === 'tournament') {
       const tour = this.tournament, opp = tour.teams[tour.opponent()];
-      opts = { mode: 'tournament', court: HC.U.pick(HC.COURTS).id, winScore: this.settings.winScore, mutators: true,
+      opts = { mode: 'tournament', court: HC.U.pick(HC.COURTS).id, winScore: this.settings.winScore, matchTime: this.settings.matchTime, mutators: true,
         teams: [tour.teams[0], Object.assign({}, opp, { cpu: tour.difficulty() })] };
     } else {
-      opts = { mode: p.mode, court: p.court, winScore: this.settings.winScore, word: p.word || 'HORSE', mutators: p.mode !== 'horse', teams: this.buildTeams(p) };
+      opts = { mode: p.mode, court: p.court, winScore: this.settings.winScore, matchTime: this.settings.matchTime, word: p.word || 'HORSE', mutators: p.mode !== 'horse', teams: this.buildTeams(p) };
     }
     this.matchOpts = opts;
     this.launch();

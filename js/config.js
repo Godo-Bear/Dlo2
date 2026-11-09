@@ -53,6 +53,7 @@ HC.CONFIG = {
 
   // ---------- Match rules ----------
   WIN_SCORE: 5,           // default points to win (settings can change it)
+  MATCH_TIME: 0,          // default whole-game time limit in minutes (0 = no limit; settings can change it)
   POINT_TIME: 20,         // seconds per point before the buzzer (timed points)
   BUZZER_WINDOW: 3,       // last N seconds count for "Buzzer Beater"
   COUNTDOWN: 2.4,         // seconds of countdown after a reset
@@ -94,3 +95,6 @@ HC.CONFIG = {
   // ---------- Courts ----------
   EVENT_WARNING: 2.0,     // seconds of warning before a court event fires
 };
+
+// Choices offered for the game time limit (minutes, 0 = off)
+HC.MATCH_TIMES = [0, 1, 2, 3, 5, 10];
