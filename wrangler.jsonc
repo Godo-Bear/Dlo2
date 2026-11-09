@@ -1,0 +1,10 @@
+// Cloudflare Workers config: serves Hoop Chaos as static assets (no build step).
+// "name" must match the Worker you created in the Cloudflare dashboard.
+{
+  "name": "dlo2",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "single-page-application"
+  }
+}

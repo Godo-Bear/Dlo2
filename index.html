@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Hoop Chaos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="touchP1" class="touch-btn left"><span>P1<br>HOLD</span></div>
+  <div id="touchP2" class="touch-btn right"><span>P2<br>HOLD</span></div>
+
+  <!-- Matter.js physics (CDN, with a fallback mirror) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script>window.Matter || document.write('<script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"><\/script>');</script>
+
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/players.js"></script>
+  <script src="js/tricks.js"></script>
+  <script src="js/mutators.js"></script>
+  <script src="js/courts.js"></script>
+  <script src="js/modes.js"></script>
+  <script src="js/bosses.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
