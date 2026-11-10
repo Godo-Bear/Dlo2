@@ -316,7 +316,7 @@ HC.drawBall = function (ctx, s, opts) {
     ctx.strokeStyle = '#a86'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -r - 6); ctx.quadraticCurveTo(6, -r - 14, 3, -r - 18); ctx.stroke();
     const flick = Math.random() * 4;
     ctx.fillStyle = bombT < 2 ? '#f22' : '#fd3'; ctx.beginPath(); ctx.arc(3, -r - 19, 3 + flick, 0, 7); ctx.fill();
-    ctx.fillStyle = bombT < 2 ? '#f44' : '#fff'; ctx.font = Math.round(r * 0.95) + 'px ' + (HC.FONT_DISPLAY || 'sans-serif'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = bombT < 2 ? '#f44' : '#fff'; ctx.font = HC.dfont ? HC.dfont(r * 1.1) : 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(Math.ceil(bombT), 0, 2);
     ctx.restore();
   } else if (style === 'eyeball') {

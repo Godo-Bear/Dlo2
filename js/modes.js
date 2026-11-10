@@ -707,7 +707,7 @@ HC.Match = class Match {
     if (this.opts.demo) return;
     if (HC.Admin && HC.Admin.get('debug', false)) HC.Admin.drawDebug(ctx, this);
     HC.UI.drawHUD(ctx, this, s);
-    this.fx.drawScreen(ctx);
+    if (this.state !== 'cards') this.fx.drawScreen(ctx);
   }
 };
 
@@ -722,15 +722,16 @@ function drawRock(ctx, d) {
 
 function drawBubble(ctx, snap) {
   const hx = snap.d[3], hy = snap.d[4], r = snap.p.dims.hr;
-  const text = snap.bubble;
+  const text = HC.cleanText ? HC.cleanText(snap.bubble).toUpperCase() : snap.bubble;
+  if (!text) return;
   ctx.save();
-  ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
-  const w = ctx.measureText(text).width + 20, h = 30;
-  const x = HC.U.clamp(hx - w / 2, 4, HC.CONFIG.WIDTH - w - 4), y = Math.max(40, hy - r - 58);
-  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
-  HC.rr(ctx, x, y, w, h, 12); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(hx - 6, y + h - 1); ctx.lineTo(hx, y + h + 10); ctx.lineTo(hx + 6, y + h - 1); ctx.fill();
-  ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + w / 2, y + h / 2 + 1);
+  ctx.font = HC.dfont(17);
+  const w = ctx.measureText(text).width + 22, h = 26;
+  const x = HC.U.clamp(hx - w / 2, 4, HC.CONFIG.WIDTH - w - 4), y = Math.max(40, hy - r - 54);
+  ctx.fillStyle = 'rgba(9,12,20,0.88)';
+  ctx.beginPath(); ctx.moveTo(x + 7, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w - 7, y + h); ctx.lineTo(hx + 6, y + h); ctx.lineTo(hx, y + h + 7); ctx.lineTo(hx - 4, y + h); ctx.lineTo(x, y + h); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = snap.p.colors.main; ctx.fillRect(x + 7, y, w - 7, 2);
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x + w / 2, y + h / 2 + 1);
   ctx.restore();
 }
 

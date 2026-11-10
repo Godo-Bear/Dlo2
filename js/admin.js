@@ -29,13 +29,14 @@ HC.Admin = {
     this.el = this.el || document.getElementById('adminModal');
     const box = this.el.querySelector('.login-box');
     box.innerHTML = `
-      <h1>🔐 <span>ADMIN</span></h1>
-      <p class="sub">Enter the secret code to unlock the admin panel.</p>
+      <h1>ADMIN <span>ACCESS</span></h1>
+      <p class="kicker">Restricted</p>
+      <p class="sub">Enter the access code to open the admin panel.</p>
       <form id="adminForm" autocomplete="off">
-        <input id="adminCode" type="password" placeholder="Secret code" maxlength="60" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <input id="adminCode" type="password" placeholder="Access code" maxlength="60" autocomplete="off" autocapitalize="off" spellcheck="false">
         <p class="err" id="adminErr"></p>
-        <button type="submit" class="primary">UNLOCK</button>
-        <button type="button" id="adminCancel">CANCEL</button>
+        <button type="submit" class="primary">Unlock</button>
+        <button type="button" id="adminCancel">Cancel</button>
       </form>`;
     this.el.style.display = 'flex';
     const input = box.querySelector('#adminCode'), err = box.querySelector('#adminErr');
@@ -48,7 +49,7 @@ HC.Admin = {
         HC.Audio.init(); HC.Audio.fanfare();
         this.hideModal(); HC.App.go('admin');
       } else {
-        err.textContent = 'ACCESS DENIED'; HC.Audio.init(); HC.Audio.groan();
+        err.textContent = 'Access denied.'; HC.Audio.init(); HC.Audio.groan();
         box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
         input.select();
       }

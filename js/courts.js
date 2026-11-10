@@ -40,13 +40,27 @@ window.HC = window.HC || {};
       floor: { top: '#d9a35c', bottom: '#a8743a', line: '#fff' }, floorFriction: 0.9,
       drawBg(ctx, m, t) {
         ctx.drawImage(cached(this, (c) => {
-          sky(c, '#5a6f8f', '#8796ad');
-          c.fillStyle = '#3d4a63'; c.fillRect(0, 300, W(), 340);
-          for (let i = 0; i < 5; i++) { c.fillStyle = '#2c3549'; c.fillRect(0, 330 + i * 60, W(), 8); }
-          ['#e74c3c', '#f1c40f', '#3498db', '#2ecc71'].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.moveTo(250 + i * 220, 40); c.lineTo(330 + i * 220, 40); c.lineTo(290 + i * 220, 110); c.fill(); });
-          c.fillStyle = '#222'; c.fillRect(560, 140, 160, 70); c.fillStyle = '#f33'; c.font = 'bold 30px monospace'; c.textAlign = 'center'; c.fillText('HOME 00', 640, 185);
+          sky(c, '#151b27', '#2a3242');
+          // rafters + arena lights
+          c.fillStyle = '#0d1119'; c.fillRect(0, 0, W(), 70);
+          c.strokeStyle = '#1c2230'; c.lineWidth = 4; for (let x = -40; x < W(); x += 80) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x + 80, 70); c.moveTo(x + 80, 0); c.lineTo(x, 70); c.stroke(); }
+          for (let i = 0; i < 6; i++) { const lx = 110 + i * 212; const lg = c.createRadialGradient(lx, 70, 4, lx, 70, 160); lg.addColorStop(0, 'rgba(255,240,210,0.35)'); lg.addColorStop(1, 'rgba(255,240,210,0)'); c.fillStyle = lg; c.fillRect(lx - 160, 60, 320, 200); c.fillStyle = '#fff6e0'; c.fillRect(lx - 18, 66, 36, 6); }
+          // championship banners
+          [['2019', '#1d3a6e'], ['2021', '#5c1a1a'], ['2023', '#1d3a6e'], ['2024', '#5c1a1a']].forEach(([yr, col], i) => {
+            const bx = 230 + i * 250 + (i > 1 ? 120 : 0); c.fillStyle = col; c.beginPath(); c.moveTo(bx, 72); c.lineTo(bx + 70, 72); c.lineTo(bx + 70, 170); c.lineTo(bx + 35, 186); c.lineTo(bx, 170); c.fill();
+            c.fillStyle = '#d8b25a'; c.fillRect(bx + 8, 80, 54, 3); c.fillRect(bx + 8, 150, 54, 2);
+            c.font = 'italic 800 22px "Barlow Condensed", Arial Narrow, sans-serif'; c.textAlign = 'center'; c.fillText(yr, bx + 35, 128); c.font = '700 9px Inter, Arial, sans-serif'; c.fillText('CHAMPIONS', bx + 35, 104);
+          });
+          // jumbotron
+          c.fillStyle = '#05070b'; c.fillRect(540, 92, 200, 104); c.strokeStyle = '#2a3242'; c.lineWidth = 3; c.strokeRect(540, 92, 200, 104);
+          c.fillStyle = '#0d1420'; c.fillRect(550, 102, 180, 84); c.fillStyle = '#ff6a13'; c.fillRect(550, 102, 180, 3);
+          c.fillStyle = '#e8edf5'; c.font = 'italic 800 34px "Barlow Condensed", Arial Narrow, sans-serif'; c.textAlign = 'center'; c.fillText('HOOP CHAOS', 640, 158);
+          // stands
+          c.fillStyle = '#1e2533'; c.fillRect(0, 300, W(), 340);
+          for (let i = 0; i < 5; i++) { c.fillStyle = '#161b26'; c.fillRect(0, 330 + i * 60, W(), 8); }
+          c.fillStyle = '#0f131b'; c.fillRect(0, 296, W(), 6);
         }), 0, 0);
-        crowd(ctx, m, t, 340, 5, ['#e74c3c', '#f39c12', '#3498db', '#ecf0f1', '#9b59b6', '#1abc9c']);
+        crowd(ctx, m, t, 340, 5, ['#3b4458', '#2b3243', '#4a546a', '#566079', '#30384a', '#7a2a2a', '#23406e', '#8c95a8']);
       },
       drawFloorDetail(ctx) { ctx.strokeStyle = 'rgba(90,50,10,0.35)'; ctx.lineWidth = 2; for (let x = -800; x < 800; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 200); ctx.stroke(); } },
       event: { name: 'Seesaw!', icon: '⚖️', every: [15, 15], duration: 5,

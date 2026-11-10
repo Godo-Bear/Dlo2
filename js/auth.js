@@ -165,11 +165,12 @@ HC.LoginPage = {
     if (signedIn) {
       box.innerHTML = `
         <h1>HOOP <span>CHAOS</span></h1>
+        <p class="kicker">Account</p>
         <p class="who">Signed in as <b></b></p>
         <p class="where">${A.user.mode === 'cloud' ? 'Your progress is saved online.' : 'Your progress is saved on this device.'}</p>
         ${A.syncError ? '<p class="err"></p>' : ''}
-        <button id="loginPlay" class="primary">PLAY</button>
-        <button id="loginLogout">LOG OUT</button>`;
+        <button id="loginPlay" class="primary">Play</button>
+        <button id="loginLogout">Sign out</button>`;
       box.querySelector('.who b').textContent = A.user.name;
       if (A.syncError) box.querySelector('.err').textContent = A.syncError;
       box.querySelector('#loginPlay').onclick = () => this.hide();
@@ -178,13 +179,14 @@ HC.LoginPage = {
     }
     box.innerHTML = `
       <h1>HOOP <span>CHAOS</span></h1>
-      <p class="sub">Log in to save your trophies, unlocked characters and bosses beaten.</p>
+      <p class="kicker">Sign in</p>
+      <p class="sub">Save your trophies, unlocked players and Adventure progress.</p>
       <form id="loginForm" autocomplete="on">
         <input id="loginName" name="username" placeholder="Name" maxlength="20" autocomplete="username" autocapitalize="off" spellcheck="false">
         <input id="loginPass" name="password" type="password" placeholder="Password" maxlength="100" autocomplete="current-password">
         <p class="err" id="loginErr"></p>
-        <button type="submit" class="primary" id="loginBtn">LOG IN</button>
-        <button type="button" id="registerBtn">CREATE ACCOUNT</button>
+        <button type="submit" class="primary" id="loginBtn">Sign in</button>
+        <button type="button" id="registerBtn">Create account</button>
       </form>
       <button id="guestBtn" class="ghost">Play as guest</button>
       <p class="where">${where}</p>`;

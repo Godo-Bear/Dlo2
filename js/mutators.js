@@ -57,28 +57,33 @@ HC.MUTATORS = [
 ];
 HC.mutatorById = (id) => HC.MUTATORS.find(x => x.id === id);
 
-// Draw a mutator card
+// Draw a mutator card (dark broadcast style)
 HC.drawCard = function (ctx, mut, x, y, w, h, hl, t) {
   ctx.save();
-  ctx.translate(x + w / 2, y + h / 2);
-  const s = hl ? 1.08 + Math.sin((t || 0) * 8) * 0.015 : 1;
-  ctx.scale(s, s); ctx.rotate(hl ? Math.sin((t || 0) * 5) * 0.015 : 0);
-  if (hl) { ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 40; }
-  ctx.fillStyle = '#1b1230'; HC.rr(ctx, -w / 2 + 4, -h / 2 + 8, w, h, 18); ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#fff8ec'; HC.rr(ctx, -w / 2, -h / 2, w, h, 18); ctx.fill();
-  ctx.strokeStyle = hl ? '#ffd23f' : '#1b1230'; ctx.lineWidth = hl ? 6 : 4; ctx.stroke();
-  const g = ctx.createLinearGradient(0, -h / 2, 0, -h / 2 + h * 0.52);
-  g.addColorStop(0, HC.shade(mut.color, 0.25)); g.addColorStop(1, HC.shade(mut.color, -0.15));
-  ctx.fillStyle = g; HC.rr(ctx, -w / 2 + 10, -h / 2 + 10, w - 20, h * 0.5, 12); ctx.fill();
-  ctx.strokeStyle = '#1b1230'; ctx.lineWidth = 3; ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,0.15)'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-w / 2 + 10 + i * 50, -h / 2 + 10 + h * 0.5, 20, Math.PI, 0); ctx.fill(); }
-  ctx.font = Math.round(h * 0.25) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(mut.icon, 0, -h / 2 + 10 + h * 0.25);
-  ctx.font = Math.round(h * 0.085) + 'px ' + HC.FONT_DISPLAY; ctx.fillStyle = '#1b1230';
-  ctx.fillText(mut.name.toUpperCase(), 0, h * 0.14);
-  ctx.font = '700 ' + Math.round(h * 0.055) + 'px ' + HC.FONT_BODY; ctx.fillStyle = '#4a3f66';
-  HC.wrapText(ctx, mut.desc, 0, h * 0.26, w - 34, h * 0.07);
+  ctx.translate(x + w / 2, y + h / 2 - (hl ? 10 : 0));
+  const W2 = w / 2, H2 = h / 2;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; HC.rr(ctx, -W2 + 3, -H2 + 6, w, h, 8); ctx.fill();
+  const g = ctx.createLinearGradient(0, -H2, 0, H2); g.addColorStop(0, '#1b2436'); g.addColorStop(1, '#0c111b');
+  ctx.fillStyle = g; HC.rr(ctx, -W2, -H2, w, h, 8); ctx.fill();
+  // colour band + large index
+  const band = ctx.createLinearGradient(-W2, -H2, W2, -H2 + h * 0.45); band.addColorStop(0, HC.hexA(mut.color === '#111' ? '#ff4757' : mut.color, 0.55)); band.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.save(); HC.rr(ctx, -W2, -H2, w, h, 8); ctx.clip(); ctx.fillStyle = band; ctx.fillRect(-W2, -H2, w, h * 0.5);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 2; for (let i = -6; i < 10; i++) { ctx.beginPath(); ctx.moveTo(-W2 + i * 28, -H2); ctx.lineTo(-W2 + i * 28 - 60, -H2 + h * 0.5); ctx.stroke(); }
+  ctx.restore();
+  ctx.fillStyle = hl ? '#ff6a13' : (mut.color === '#111' ? '#ff4757' : mut.color); ctx.fillRect(-W2, -H2, w, 4);
+  ctx.strokeStyle = hl ? '#ff6a13' : 'rgba(255,255,255,0.12)'; ctx.lineWidth = hl ? 2 : 1; HC.rr(ctx, -W2 + 0.5, -H2 + 0.5, w - 1, h - 1, 8); ctx.stroke();
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.font = '700 11px ' + HC.FONT_BODY; if ('letterSpacing' in ctx) ctx.letterSpacing = '2px'; ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.fillText('MUTATOR', -W2 + 20, -H2 + 26); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  ctx.font = HC.dfont(Math.round(h * 0.4)); ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.textAlign = 'right'; ctx.fillText(String(HC.MUTATORS.indexOf(mut) + 1).padStart(2, '0'), W2 - 14, -H2 + h * 0.24);
+  ctx.textAlign = 'left';
+  let fs = Math.round(h * 0.1); ctx.font = HC.dfont(fs);
+  const name = mut.name.toUpperCase();
+  while (ctx.measureText(name).width > w - 40 && fs > 14) { fs--; ctx.font = HC.dfont(fs); }
+  ctx.fillStyle = '#fff'; ctx.fillText(name, -W2 + 20, -H2 + h * 0.56);
+  ctx.fillStyle = '#ff6a13'; ctx.fillRect(-W2 + 20, -H2 + h * 0.56 + fs * 0.62, 36, 3);
+  ctx.font = '500 ' + Math.round(h * 0.047) + 'px ' + HC.FONT_BODY; ctx.fillStyle = '#9aa4b6';
+  HC.wrapText(ctx, mut.desc, -W2 + 20, -H2 + h * 0.74, w - 40, h * 0.065);
+  if (hl) { ctx.font = '700 11px ' + HC.FONT_BODY; ctx.fillStyle = '#ff6a13'; if ('letterSpacing' in ctx) ctx.letterSpacing = '2px'; ctx.fillText('SELECT', -W2 + 20, H2 - 20); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'; }
   ctx.restore();
 };
 

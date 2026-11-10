@@ -334,8 +334,8 @@ HC.App = {
     // screen transition wipe
     if (this.transT > 0) {
       const k = this.transT, x = C.WIDTH * 1.25 * (1 - k) - 150;
-      ctx.fillStyle = HC.UIC.pink; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(C.WIDTH + 200, 0); ctx.lineTo(C.WIDTH + 200, C.HEIGHT); ctx.lineTo(x - 150, C.HEIGHT); ctx.fill();
-      ctx.fillStyle = HC.UIC.bg1; ctx.beginPath(); ctx.moveTo(x + 40, 0); ctx.lineTo(C.WIDTH + 200, 0); ctx.lineTo(C.WIDTH + 200, C.HEIGHT); ctx.lineTo(x - 110, C.HEIGHT); ctx.fill();
+      ctx.fillStyle = HC.UIC.orange; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(C.WIDTH + 200, 0); ctx.lineTo(C.WIDTH + 200, C.HEIGHT); ctx.lineTo(x - 150, C.HEIGHT); ctx.fill();
+      ctx.fillStyle = '#0b0f18'; ctx.beginPath(); ctx.moveTo(x + 12, 0); ctx.lineTo(C.WIDTH + 200, 0); ctx.lineTo(C.WIDTH + 200, C.HEIGHT); ctx.lineTo(x - 138, C.HEIGHT); ctx.fill();
       this.transT = Math.max(0, this.transT - 0.09);
     }
     ctx.restore();

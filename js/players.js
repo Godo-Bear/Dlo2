@@ -398,7 +398,7 @@ HC.Cpu = class Cpu {
 };
 
 // ---------- Drawing ----------
-const INK = '#1b1230';
+const INK = '#151a24';
 HC.drawPlayer = function (ctx, snap, opts) {
   opts = opts || {};
   const p = snap.p, d = snap.d, dm = p.dims, def = p.def;
@@ -429,7 +429,7 @@ HC.drawPlayer = function (ctx, snap, opts) {
 
   const metal = def.style === 'bolt' || def.style === 'hoopatron';
   const limbSkin = metal ? '#8592a6' : def.skin;
-  const outline = 2.4;
+  const outline = 1.8;
   const caps = (pt, w, h, fill, back) => {
     ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(pt.a);
     const g = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
@@ -496,7 +496,7 @@ HC.drawPlayer = function (ctx, snap, opts) {
   ctx.restore();
   const num = String(p.number != null && p.number !== '' ? p.number : '');
   if (num) {
-    ctx.font = Math.round(dm.th * 0.36) + 'px ' + HC.FONT_DISPLAY; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = HC.dfont(dm.th * 0.42); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.strokeText(num, 0, 2); ctx.fillStyle = col.alt; ctx.fillText(num, 0, 2);
   }
   if (def.style === 'coach') { ctx.strokeStyle = '#eee'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-dm.tw * 0.3, -dm.th / 2 + 2); ctx.lineTo(0, -dm.th * 0.12); ctx.lineTo(dm.tw * 0.3, -dm.th / 2 + 2); ctx.stroke(); ctx.fillStyle = '#d9d9d9'; ctx.beginPath(); ctx.arc(0, -dm.th * 0.1, 3.5, 0, 7); ctx.fill(); ctx.stroke(); }
@@ -533,8 +533,8 @@ HC.drawPlayer = function (ctx, snap, opts) {
     ctx.fillStyle = 'rgba(15,10,35,0.75)'; rr(ctx, x - 2, y - 2, 48, 10, 5); ctx.fill();
     ctx.fillStyle = snap.hold >= 1 ? '#ffd23f' : '#2ee6a6'; rr(ctx, x, y, 44 * snap.hold, 6, 3); ctx.fill();
     if (snap.over > 0 && p.match && p.match.specialReady && p.match.specialReady(p.team)) {
-      ctx.fillStyle = '#ff3d7f'; rr(ctx, x, y, 44 * snap.over, 6, 3); ctx.fill();
-      if (snap.over >= 1) { ctx.font = '14px ' + HC.FONT_DISPLAY; ctx.textAlign = 'center'; ctx.fillStyle = '#ff3d7f'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.strokeText('SPECIAL!', torso.x, y - 10); ctx.fillText('SPECIAL!', torso.x, y - 10); }
+      ctx.fillStyle = '#ff6a13'; rr(ctx, x, y, 44 * snap.over, 6, 3); ctx.fill();
+      if (snap.over >= 1) { ctx.font = HC.dfont(16); ctx.textAlign = 'center'; ctx.fillStyle = '#ff6a13'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.strokeText('SPECIAL!', torso.x, y - 10); ctx.fillText('SPECIAL!', torso.x, y - 10); }
     }
   }
   ctx.restore();
@@ -551,7 +551,7 @@ function drawHead(ctx, h, r, def, snap, f, t) {
   ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(h.a);
   const st = def.style, mood = snap.mood;
   const determined = snap.hold > 0.3 && mood === 'neutral';
-  ctx.lineWidth = 2.6; ctx.strokeStyle = INK;
+  ctx.lineWidth = 2; ctx.strokeStyle = INK;
   // ---------- robots ----------
   if (st === 'bolt' || st === 'hoopatron') {
     const g = ctx.createLinearGradient(-r, -r, r, r); g.addColorStop(0, shade(def.skin, 0.3)); g.addColorStop(1, shade(def.skin, -0.25));
@@ -583,9 +583,6 @@ function drawHead(ctx, h, r, def, snap, f, t) {
   ctx.fill(); ctx.stroke();
   // ear
   if (!blobby && st !== 'flurry' && st !== 'rex') { ctx.fillStyle = shade(def.skin, -0.08); ctx.beginPath(); ctx.ellipse(-f * r * 0.62, r * 0.05, r * 0.2, r * 0.26, 0, 0, 7); ctx.fill(); ctx.stroke(); }
-  // cheeks
-  ctx.fillStyle = 'rgba(255,110,110,0.28)';
-  ctx.beginPath(); ctx.ellipse(f * r * 0.62, r * 0.32, r * 0.17, r * 0.11, 0, 0, 7); ctx.fill();
   // ---------- hair / hats ----------
   ctx.fillStyle = def.hair; ctx.strokeStyle = INK; ctx.lineWidth = 2.4;
   if (st === 'noodle') { for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.ellipse(i * r * 0.24, -r * 0.88, r * 0.17, r * 0.55, i * 0.28 + Math.sin(t * 5 + i) * 0.22, 0, 7); ctx.fill(); ctx.stroke(); } ctx.fillStyle = '#c96'; for (const fx2 of [0.35, 0.55]) { ctx.beginPath(); ctx.arc(f * r * fx2, r * 0.18, 1.4, 0, 7); ctx.fill(); } }
@@ -594,7 +591,7 @@ function drawHead(ctx, h, r, def, snap, f, t) {
   else if (st === 'rex') { ctx.fillStyle = 'rgba(200,235,255,0.35)'; ctx.beginPath(); ctx.arc(0, -r * 0.05, r * 1.18, 0, 7); ctx.fill(); ctx.strokeStyle = '#dfe6ee'; ctx.lineWidth = 4; ctx.stroke(); ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.beginPath(); ctx.arc(0, -r * 0.05, r * 1.26, 0, 7); ctx.stroke(); ctx.fillStyle = def.hair; ctx.beginPath(); ctx.moveTo(-r * 0.22, -r * 1.2); ctx.quadraticCurveTo(0, -r * 2, r * 0.28, -r * 1.2); ctx.fill(); ctx.stroke(); }
   else if (st === 'tony') { ctx.beginPath(); ctx.moveTo(-r * 0.95, -r * 0.15); ctx.quadraticCurveTo(-r, -r * 1.15, f * r * 0.4, -r * 1.05); ctx.quadraticCurveTo(r * 1.05, -r * 0.9, r * 0.95, -r * 0.2); ctx.quadraticCurveTo(0, -r * 0.6, -r * 0.95, -r * 0.15); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(40,40,60,0.18)'; ctx.beginPath(); ctx.arc(f * r * 0.1, r * 0.4, r * 0.55, 0.2, Math.PI - 0.2); ctx.fill(); }
   else if (st === 'swamp') { ctx.fillStyle = def.hair; ctx.beginPath(); ctx.moveTo(-r * 0.7, -r * 0.72); for (let i = 0; i < 5; i++) { ctx.lineTo(-r * 0.7 + i * r * 0.35 + r * 0.17, -r * 1.4); ctx.lineTo(-r * 0.7 + (i + 1) * r * 0.35, -r * 0.78); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#e63946'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(-r * 0.35 + i * r * 0.35, -r * 0.95, 2.6, 0, 7); ctx.fill(); } ctx.fillStyle = 'rgba(40,120,30,0.6)'; ctx.beginPath(); ctx.ellipse(r * 0.2, r * 0.95, r * 0.12, r * 0.3, 0, 0, 7); ctx.fill(); }
-  else if (st === 'coach') { ctx.fillStyle = '#d62839'; ctx.beginPath(); ctx.arc(0, -r * 0.2, r * 1.03, Math.PI * 1.02, -0.02); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); rr(ctx, f > 0 ? 0 : -r * 1.55, -r * 0.33, r * 1.55, r * 0.22, 3); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = (r * 0.6) + 'px ' + HC.FONT_DISPLAY; ctx.textAlign = 'center'; ctx.fillText('C', 0, -r * 0.48); }
+  else if (st === 'coach') { ctx.fillStyle = '#d62839'; ctx.beginPath(); ctx.arc(0, -r * 0.2, r * 1.03, Math.PI * 1.02, -0.02); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); rr(ctx, f > 0 ? 0 : -r * 1.55, -r * 0.33, r * 1.55, r * 0.22, 3); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = HC.dfont(r * 0.7); ctx.textAlign = 'center'; ctx.fillText('C', 0, -r * 0.48); }
   else if (st === 'blob') { ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.beginPath(); ctx.ellipse(-r * 0.35, -r * 0.5, r * 0.28, r * 0.15, -0.5, 0, 7); ctx.fill(); ctx.fillStyle = def.hair; ctx.beginPath(); ctx.moveTo(0, -r * 0.95); ctx.quadraticCurveTo(r * 0.3, -r * 1.6, r * 0.05, -r * 1.55); ctx.stroke(); ctx.beginPath(); ctx.arc(r * 0.08, -r * 1.55, 4, 0, 7); ctx.fill(); ctx.stroke(); }
   else if (st === 'zippy') { for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-r * 0.8 + i * r * 0.36, -r * 0.6); ctx.lineTo(-f * r * 0.5 - r * 0.6 + i * r * 0.36, -r * 1.45); ctx.lineTo(-r * 0.5 + i * r * 0.36, -r * 0.7); ctx.fill(); ctx.stroke(); } ctx.fillStyle = '#ffd23f'; ctx.fillRect(-r, -r * 0.52, r * 2, r * 0.24); ctx.strokeRect(-r, -r * 0.52, r * 2, r * 0.24); ctx.fillStyle = '#ff3d7f'; ctx.beginPath(); ctx.moveTo(f * r * 0.1, -r * 0.55); ctx.lineTo(f * r * 0.35, -r * 0.4); ctx.lineTo(f * r * 0.2, -r * 0.4); ctx.lineTo(f * r * 0.45, -r * 0.22); ctx.lineTo(f * r * 0.12, -r * 0.38); ctx.lineTo(f * r * 0.28, -r * 0.38); ctx.closePath(); ctx.fill(); }
   else if (st === 'flurry') { ctx.fillStyle = '#3a86ff'; ctx.beginPath(); ctx.arc(0, -r * 0.25, r * 1.02, Math.PI * 1.02, -0.02); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillRect(-r * 1.02, -r * 0.38, r * 2.04, r * 0.2); ctx.strokeRect(-r * 1.02, -r * 0.38, r * 2.04, r * 0.2); ctx.beginPath(); ctx.arc(0, -r * 1.3, r * 0.25, 0, 7); ctx.fill(); ctx.stroke(); }
@@ -665,8 +662,9 @@ function hexA(hex, a) {
   const n = parseInt(c.slice(0, 6), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
 }
 HC.rr = rr; HC.shade = shade; HC.hexA = hexA;
-HC.FONT_DISPLAY = '"Luckiest Guy", "Arial Black", Impact, sans-serif';
-HC.FONT_BODY = '"Nunito", "Trebuchet MS", sans-serif';
+HC.FONT_DISPLAY = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+HC.FONT_BODY = '"Inter", "Segoe UI", Arial, sans-serif';
+HC.dfont = (px, w) => 'italic ' + (w || 800) + ' ' + Math.round(px) + 'px ' + HC.FONT_DISPLAY;
 
 // Character portrait for menus (no physics): draws a standing pose with feet at (x, y)
 HC.drawPortrait = function (ctx, charId, x, y, size, colors, mood, opts) {
