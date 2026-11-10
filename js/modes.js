@@ -31,6 +31,17 @@ HC.Match = class Match {
     this.statsPlayers = []; // persistent stat holders per (team,slot)
     this.paused = false; this.over = false;
     this.boss = opts.boss ? new HC.BossFight(this, opts.boss) : null;
+    // team special meters (abilities) + per-team stats used by Adventure objectives
+    this.special = [0, 0]; this.effects = [];
+    this.abilitiesOn = this.mode !== 'horse' && !opts.noAbilities;
+    this.teamStats = [{ tricks: 0, threes: 0, dunks: 0 }, { tricks: 0, threes: 0, dunks: 0 }];
+    this.ballSkin = opts.ballSkin || 'classic';
+    // a mutator that stays on for the whole match (Adventure stages, admin)
+    this.fixedMutator = opts.fixedMutator ? HC.mutatorById(opts.fixedMutator) : null;
+    if (!this.fixedMutator && !opts.demo && HC.Admin && HC.Admin.get('forceMut', null) && this.mode !== 'horse') this.fixedMutator = HC.mutatorById(HC.Admin.get('forceMut'));
+    if (this.fixedMutator) this.fixedMutator.apply(this);
+    this.chaos = !opts.demo && this.mode !== 'horse' && HC.Admin && HC.Admin.get('chaos', false);
+    if (this.chaos && !this.fixedMutator) { this.activeMutator = HC.U.pick(HC.MUTATORS); this.activeMutator.apply(this); }
     this.pointsPlayed = 0;
     this.resetPoint(true);
   }
@@ -54,7 +65,8 @@ HC.Match = class Match {
     this.players = [];
     for (const s of this.spawnList()) {
       const t = this.teams[s.team], up = t.upgrades || {};
-      const opts = Object.assign({ colors: t.colors, jumpMul: up.jumpMul || 1, windupMul: up.windupMul || 1, sticky: up.sticky || 0, accuracyMul: up.accuracyMul || 1, stability: up.stability || 1 }, s.opts || {});
+      const adminJump = !t.cpu && HC.Admin && !this.opts.demo ? HC.Admin.get('jump', 1) : 1;
+      const opts = Object.assign({ colors: t.colors, jumpMul: (up.jumpMul || 1) * adminJump, windupMul: up.windupMul || 1, sticky: up.sticky || 0, accuracyMul: up.accuracyMul || 1, stability: up.stability || 1 }, s.opts || {});
       const p = new HC.Player(this, s.team, s.slot, s.char, s.x, opts);
       const key = s.team + ':' + s.slot;
       let st = this.statsPlayers.find(x => x.key === key);
@@ -66,6 +78,22 @@ HC.Match = class Match {
 
   activePlayers() { return this.players.filter(p => !p.hidden); }
   mainBall() { return this.balls[0]; }
+  defendHoop(team) { return this.mode === 'horse' ? this.world.hoops[1] : this.world.hoops[team === 0 ? 0 : 1]; }
+  specialReady(team) {
+    if (!this.abilitiesOn || (this.boss && team === 1)) return false;
+    const adm = HC.Save && HC.Save.data && HC.Save.data.admin;
+    if (adm && adm.enabled && adm.infiniteSpecial && !this.cpus[team]) return true;
+    return this.special[team] >= 1;
+  }
+  fireSpecial(p) {
+    if (!this.specialReady(p.team)) return;
+    this.special[p.team] = 0;
+    const mine = this.activePlayers().filter(o => o.team === p.team);
+    for (const o of mine) HC.Abilities.activate(this, o);
+    const names = mine.map(o => { const a = HC.abilityOf(o.def); return a ? a.icon + ' ' + a.name.toUpperCase() : ''; }).filter(Boolean);
+    this.fx.bigText(names.join('  +  '), this.teams[p.team].colors.main, 1.3);
+    HC.Audio.trick(); this.fx.shake(6);
+  }
   attackHoop(team) { return this.mode === 'horse' ? this.world.hoops[1] : this.world.hoops[team === 0 ? 1 : 0]; }
 
   resetPoint(first) {
@@ -79,6 +107,7 @@ HC.Match = class Match {
     this.setFloorAngle(0);
     this.windCourt = this.windBoss = 0; this.darkCourt = 0; this.lavaH = 0;
     this.clearDebris(false);
+    if (HC.Abilities) HC.Abilities.clear(this);
     for (const c of this.cannons) this.world.removeBody(c); this.cannons = [];
     for (const b of this.balls) b.remove(); this.balls = [];
     this.refreshLive();
@@ -96,7 +125,7 @@ HC.Match = class Match {
     const xs = this.mods.doubleBall ? [560, 720] : [640];
     for (const x of xs) {
       const b = new HC.Ball(this.world, x, 230, this.mods);
-      b.spawn = { x, y: 230 };
+      b.spawn = { x, y: 230 }; b.skin = this.ballSkin;
       if (this.mods.bomb || this.mode === 'hotpotato') b.bomb = { t: HC.U.rand(...HC.CONFIG.BOMB_TIME) };
       this.balls.push(b);
     }
@@ -202,8 +231,10 @@ HC.Match = class Match {
     const cpu = this.cpus[p.team];
     let err = C.SHOT_ERROR_BASE + C.SHOT_ERROR_TIMING * U.clamp(Math.abs(p.vy) / 6, 0, 1) + C.SHOT_ERROR_DIST * Math.abs(dx);
     err /= acc; if (cpu) err *= cpu.cfg.aimMul;
+    const sure = p.has && p.has('sure');
+    if (sure) { err = 0; delete p.buff.sure; this.fx.popup('🎯', p.x, p.y - 80, '#ffd23f', 34, 0.8); }
     if (this.mode === 'horse') err *= 0.8;
-    const ang = U.gauss() * err, pw = 1 + U.gauss() * C.SHOT_POWER_ERROR / acc;
+    const ang = U.gauss() * err, pw = sure ? 1 : 1 + U.gauss() * C.SHOT_POWER_ERROR / acc;
     const cs = Math.cos(ang), sn = Math.sin(ang);
     const rvx = (vx * cs - vy * sn) * pw, rvy = (vx * sn + vy * cs) * pw;
     this.dropBall(ball, false);
@@ -272,13 +303,14 @@ HC.Match = class Match {
         Matter.Body.setPosition(ball.body, { x: hp.x + dx / d * off, y: hp.y + dy / d * off });
         Matter.Body.setVelocity(ball.body, { x: arm.velocity.x, y: arm.velocity.y });
         ball.holdTime += dt;
-        if (this.state === 'play' && ball.holdTime > C.STEAL_COOLDOWN) {
+        if (this.state === 'play' && ball.holdTime > C.STEAL_COOLDOWN && !p.has('shield') && !p.has('phase')) {
           for (const o of this.activePlayers()) {
             if (o.team === p.team || o.knock > 0 || o.ball) continue;
             for (const w of ['armF', 'armB']) {
               const h = o.handPos(w);
               if (U.dist(h.x, h.y, ball.x, ball.y) < ball.r + o.dims.aw * 0.7 + 4 && Math.random() < 1 - (p.opts.sticky || 0) * 0.8) {
                 this.dropBall(ball, false); this.grab(ball, o); o.stats.steals++;
+                this.special[o.team] = Math.min(1, this.special[o.team] + C.SPECIAL_ON_STEAL);
                 if (Math.random() < 0.5) o.say(U.pick(HC.SAY.steal), 1); p.setMood('sad', 0.8);
                 this.fx.burst(ball.x, ball.y, 8, ['#fff', '#ff0'], 3, 0.35);
                 break;
@@ -361,12 +393,14 @@ HC.Match = class Match {
     if (tricks.includes('dunk')) { this.fx.shake(C.SHAKE_DUNK); this.hitPause = C.HITPAUSE_FRAMES; HC.Audio.stomp(); }
     this.fx.burst(hoop.x, hoop.y + 20, 30, [this.teams[team].colors.main, '#fff', '#ff0'], 6, 0.8);
     const pts = base + tricks.length;
+    const ts = this.teamStats[team]; ts.tricks += tricks.length; if (base === 3) ts.threes++; if (tricks.includes('dunk')) ts.dunks++;
     this.awardPoints(team, pts, scorer, tricks, null, base);
   }
 
   awardPoints(team, pts, scorer, tricks, customLabel, base) {
     const C = HC.CONFIG, U = HC.U;
     if (this.boss && team === 0) this.boss.damage(pts); else if (this.boss) this.boss.bossScore += pts; else this.score[team] += pts;
+    this.special[1 - team] = Math.min(1, this.special[1 - team] + C.SPECIAL_ON_SCORED);
     if (scorer) {
       scorer.stats.points += pts; scorer.stats.makes++;
       for (const t of tricks) scorer.stats.tricks[t] = (scorer.stats.tricks[t] || 0) + 1;
@@ -431,6 +465,7 @@ HC.Match = class Match {
 
   nextPoint(mut) {
     if (this.activeMutator) { this.activeMutator.remove(this); this.activeMutator = null; }
+    if (!mut && this.chaos && !this.fixedMutator) mut = HC.U.pick(HC.MUTATORS);
     if (mut) { this.activeMutator = mut; mut.apply(this); }
     this.cards = null;
     this.resetPoint(false);
@@ -479,6 +514,9 @@ HC.Match = class Match {
 
     if (this.state === 'play') {
       if (this.activeMutator && this.activeMutator.update) this.activeMutator.update(this, dt);
+      if (this.fixedMutator && this.fixedMutator.update) this.fixedMutator.update(this, dt);
+      if (this.abilitiesOn) for (let t = 0; t < 2; t++) this.special[t] = Math.min(1, this.special[t] + dt / C.SPECIAL_FILL_TIME);
+      HC.Abilities.update(this, dt);
       if (this.boss) this.boss.update(dt);
       this.updateCourtEvent(dt);
     }
@@ -631,6 +669,9 @@ HC.Match = class Match {
     const fl = this.court.floor, g = ctx.createLinearGradient(0, 0, 0, 120);
     g.addColorStop(0, fl.top); g.addColorStop(1, fl.bottom); ctx.fillStyle = g; ctx.fillRect(-C.WIDTH, 0, C.WIDTH * 2, 200);
     if (this.court.drawFloorDetail) this.court.drawFloorDetail(ctx, t);
+    const sheen = ctx.createLinearGradient(0, 0, 0, 70); sheen.addColorStop(0, 'rgba(255,255,255,0.22)'); sheen.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sheen; ctx.fillRect(-C.WIDTH, 0, C.WIDTH * 2, 70);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(-C.WIDTH, 0, C.WIDTH * 2, 3);
     ctx.strokeStyle = fl.line; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(-C.WIDTH, 2); ctx.lineTo(C.WIDTH, 2); ctx.stroke();
     ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 80); ctx.stroke();
@@ -646,6 +687,8 @@ HC.Match = class Match {
     for (const c of s.cannons) { ctx.fillStyle = '#444'; ctx.beginPath(); ctx.arc(c[0], c[1], 12, 0, 7); ctx.fill(); ctx.strokeStyle = '#f33'; ctx.lineWidth = 2; ctx.stroke(); }
     if (s.boss) this.boss.drawBack(ctx, s.boss);
     for (const p of s.players) HC.drawPlayer(ctx, p);
+    if (this.state !== 'replay') HC.Abilities.draw(ctx, this);
+    for (const b of s.balls) { const h = Math.max(0, C.FLOOR_Y - b[1]); if (h < 420) { const k = 1 - h / 420; ctx.fillStyle = 'rgba(0,0,0,' + (0.3 * k) + ')'; ctx.beginPath(); ctx.ellipse(b[0], C.FLOOR_Y + 2, b[3] * (0.6 + k * 0.6), 4 * k + 1, 0, 0, 7); ctx.fill(); } }
     s.balls.forEach((b) => HC.drawBall(ctx, b));
     if (this.court.drawFg) this.court.drawFg(ctx, this, t);
     if (s.boss) this.boss.drawFront(ctx, s.boss);
@@ -662,6 +705,7 @@ HC.Match = class Match {
     for (const p of s.players) if (p.bubble) drawBubble(ctx, p);
     ctx.restore();
     if (this.opts.demo) return;
+    if (HC.Admin && HC.Admin.get('debug', false)) HC.Admin.drawDebug(ctx, this);
     HC.UI.drawHUD(ctx, this, s);
     this.fx.drawScreen(ctx);
   }
@@ -726,6 +770,7 @@ HC.HorseMatch = class HorseMatch extends HC.Match {
   spawnBalls() {
     const p = this.players[0];
     const b = new HC.Ball(this.world, p.x, p.y - 80, this.mods);
+    b.skin = this.ballSkin;
     b.spawn = { x: p.x, y: p.y - 80 };
     this.balls.push(b);
     this.pendingGrab = b;

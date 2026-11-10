@@ -62,18 +62,23 @@ HC.drawCard = function (ctx, mut, x, y, w, h, hl, t) {
   ctx.save();
   ctx.translate(x + w / 2, y + h / 2);
   const s = hl ? 1.08 + Math.sin((t || 0) * 8) * 0.015 : 1;
-  ctx.scale(s, s);
-  ctx.shadowColor = hl ? '#ff0' : 'rgba(0,0,0,0.6)'; ctx.shadowBlur = hl ? 30 : 12;
-  ctx.fillStyle = '#fff'; HC.rr(ctx, -w / 2, -h / 2, w, h, 16); ctx.fill();
+  ctx.scale(s, s); ctx.rotate(hl ? Math.sin((t || 0) * 5) * 0.015 : 0);
+  if (hl) { ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 40; }
+  ctx.fillStyle = '#1b1230'; HC.rr(ctx, -w / 2 + 4, -h / 2 + 8, w, h, 18); ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = mut.color; HC.rr(ctx, -w / 2 + 8, -h / 2 + 8, w - 16, h * 0.5, 12); ctx.fill();
-  ctx.font = Math.round(h * 0.24) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(mut.icon, 0, -h / 2 + 8 + h * 0.25);
-  ctx.fillStyle = '#222'; ctx.font = 'bold ' + Math.round(h * 0.085) + 'px "Trebuchet MS", sans-serif';
-  ctx.fillText(mut.name.toUpperCase(), 0, h * 0.12);
-  ctx.font = Math.round(h * 0.06) + 'px "Trebuchet MS", sans-serif'; ctx.fillStyle = '#444';
-  HC.wrapText(ctx, mut.desc, 0, h * 0.24, w - 30, h * 0.075);
-  if (hl) { ctx.strokeStyle = '#fc0'; ctx.lineWidth = 6; HC.rr(ctx, -w / 2, -h / 2, w, h, 16); ctx.stroke(); }
+  ctx.fillStyle = '#fff8ec'; HC.rr(ctx, -w / 2, -h / 2, w, h, 18); ctx.fill();
+  ctx.strokeStyle = hl ? '#ffd23f' : '#1b1230'; ctx.lineWidth = hl ? 6 : 4; ctx.stroke();
+  const g = ctx.createLinearGradient(0, -h / 2, 0, -h / 2 + h * 0.52);
+  g.addColorStop(0, HC.shade(mut.color, 0.25)); g.addColorStop(1, HC.shade(mut.color, -0.15));
+  ctx.fillStyle = g; HC.rr(ctx, -w / 2 + 10, -h / 2 + 10, w - 20, h * 0.5, 12); ctx.fill();
+  ctx.strokeStyle = '#1b1230'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.15)'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-w / 2 + 10 + i * 50, -h / 2 + 10 + h * 0.5, 20, Math.PI, 0); ctx.fill(); }
+  ctx.font = Math.round(h * 0.25) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(mut.icon, 0, -h / 2 + 10 + h * 0.25);
+  ctx.font = Math.round(h * 0.085) + 'px ' + HC.FONT_DISPLAY; ctx.fillStyle = '#1b1230';
+  ctx.fillText(mut.name.toUpperCase(), 0, h * 0.14);
+  ctx.font = '700 ' + Math.round(h * 0.055) + 'px ' + HC.FONT_BODY; ctx.fillStyle = '#4a3f66';
+  HC.wrapText(ctx, mut.desc, 0, h * 0.26, w - 34, h * 0.07);
   ctx.restore();
 };
 

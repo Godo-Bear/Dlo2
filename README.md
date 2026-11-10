@@ -11,13 +11,27 @@ Cloudflare Workers deployment.
 - Hold = crouch / wind up. Release = jump and swing arms.
 - Holding the ball? Jump, then tap again near the top of the jump to shoot.
 - `Esc` / `P` = pause.
+- **Specials:** every character has an ability. When your team's ⚡ SPECIAL meter is full, keep holding
+  past a full wind-up (the bar turns pink) and release - both your players fire their abilities.
+
+## Modes
+- **Adventure** - 6 worlds x 5 stages (bosses and super-team finales), 3 stars per stage, coins,
+  unlockable characters, ball skins and jerseys, star milestones.
+- Quick Match, Horse / Trick, Tournament, Boss Battles, Hot Potato.
+- **Locker** - spend coins and equip ball skins and jerseys.
+- **Admin panel** - Settings → ADMIN PANEL, then enter the secret code. (It's a client-side cheat menu,
+  not a security feature.)
 
 ## Code
 | File | What |
 |---|---|
 | `js/config.js` | **All tuning values** (jump force, gravity, arm swing, boss health...) |
 | `js/physics.js` | Matter.js world, hoops (wobbling rim, swinging net), balls |
-| `js/players.js` | Ragdoll players, characters, CPU, character drawing |
+| `js/players.js` | Ragdoll players, 15 characters, CPU, character art |
+| `js/abilities.js` | Character specials (one object per ability) |
+| `js/adventure.js` | Adventure worlds, stages, stars and rewards (pure data + progress) |
+| `js/cosmetics.js` | Jerseys, ball-skin shop, coins |
+| `js/admin.js` | Admin panel code check and actions |
 | `js/tricks.js` | Trick-shot detection, combo labels, replay recorder |
 | `js/mutators.js` | Mutator cards (`apply`/`remove` objects) |
 | `js/courts.js` | Living courts (one config object each) |

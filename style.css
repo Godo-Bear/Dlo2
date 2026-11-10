@@ -11,17 +11,17 @@ canvas { display: block; }
 .touch-btn.down { transform: scale(0.92); background: rgba(255,222,0,0.6); }
 
 /* ---------- login page ---------- */
-#login {
+#login, #adminModal {
   position: fixed; inset: 0; z-index: 20; align-items: center; justify-content: center;
   background: rgba(10, 5, 30, 0.72); backdrop-filter: blur(3px); padding: 16px; box-sizing: border-box;
-  font-family: "Trebuchet MS", sans-serif;
+  font-family: "Nunito", "Trebuchet MS", sans-serif;
 }
 .login-box {
-  width: 100%; max-width: 380px; background: linear-gradient(160deg, #2b1055, #7a1f5c);
-  border: 4px solid #111; border-radius: 22px; padding: 26px 24px; box-sizing: border-box;
+  width: 100%; max-width: 390px; background: linear-gradient(160deg, #3a206e, #1a0e3a);
+  border: 4px solid #1b1230; border-radius: 22px; padding: 26px 24px; box-sizing: border-box;
   box-shadow: 0 10px 0 rgba(0,0,0,0.45); color: #fff; text-align: center;
 }
-.login-box h1 { margin: 0 0 6px; font: 900 40px "Arial Black", Impact, sans-serif; color: #ff6a00; -webkit-text-stroke: 2px #111; letter-spacing: 1px; }
+.login-box h1 { margin: 0 0 6px; font: 400 46px "Luckiest Guy", "Arial Black", Impact, sans-serif; color: #ff7a1a; -webkit-text-stroke: 2px #1b1230; letter-spacing: 1px; text-shadow: 0 5px 0 #1b1230; }
 .login-box h1 span { color: #ffde00; }
 .login-box .sub, .login-box .where, .login-box .who { margin: 6px 0 14px; font-size: 15px; color: #f0e6ff; }
 .login-box .where { font-size: 13px; color: #cbb8e6; margin: 14px 0 0; }
@@ -31,10 +31,20 @@ canvas { display: block; }
 }
 .login-box input:focus { border-color: #ffde00; }
 .login-box button {
-  display: block; width: 100%; margin: 8px 0 0; padding: 13px; font: 900 18px "Arial Black", Impact, sans-serif;
-  color: #fff; background: #555; border: 3px solid #111; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+  display: block; width: 100%; margin: 8px 0 0; padding: 13px 13px 10px; font: 400 21px "Luckiest Guy", "Arial Black", Impact, sans-serif; letter-spacing: 1px;
+  color: #fff; background: #5d5873; border: 3px solid #1b1230; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 0 #1b1230; text-shadow: 0 2px 0 #1b1230; transition: transform .08s;
 }
-.login-box button.primary { background: #ff6a00; }
+.login-box button.primary { background: linear-gradient(#ffa25c, #ff7a1a); }
+.login-box button:hover { transform: translateY(-2px); }
+.login-box button:active { transform: translateY(4px); box-shadow: 0 2px 0 #1b1230; }
 .login-box button.ghost { background: transparent; border-color: rgba(255,255,255,0.4); box-shadow: none; font: 600 15px "Trebuchet MS", sans-serif; margin-top: 14px; }
 .login-box button:disabled { opacity: 0.6; cursor: wait; }
 .login-box .err { min-height: 18px; margin: 2px 0 4px; color: #ff8a8a; font-size: 14px; }
+
+.login-box { box-shadow: 0 10px 0 #1b1230, 0 30px 60px rgba(0,0,0,0.5); }
+.login-box input { font-family: "Nunito", sans-serif; font-weight: 800; }
+.login-box.shake { animation: shake .4s; }
+@keyframes shake { 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+#adminModal .login-box { background: linear-gradient(160deg, #6a0f63, #1a0e3a); }
+#adminModal h1 span { color: #ff7ae5; }
+.touch-btn { font-family: "Luckiest Guy", "Arial Black", sans-serif; font-weight: 400; letter-spacing: 1px; box-shadow: 0 6px 0 rgba(0,0,0,0.5); }

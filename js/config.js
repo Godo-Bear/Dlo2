@@ -28,6 +28,10 @@ HC.CONFIG = {
   KNOCKDOWN_ANGLE: 1.25,  // torso tilt (rad) on the floor that counts as "fallen over"
   GETUP_TIME: 0.75,       // seconds lying on the floor before getting back up
   JETPACK_FORCE: 7.5,     // Rocket Rex mid-air boost speed
+  OVERCHARGE_TIME: 0.45,  // extra seconds of holding (after a full wind-up) that fires your SPECIAL
+  SPECIAL_FILL_TIME: 16,  // seconds for the team special meter to fill on its own
+  SPECIAL_ON_STEAL: 0.15, // meter bonus for a steal
+  SPECIAL_ON_SCORED: 0.3, // meter bonus when the other team scores (comeback help)
 
   // ---------- Ball ----------
   BALL_RADIUS: 15,
